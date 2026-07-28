@@ -6,17 +6,21 @@ Build notes for a `kind` (Kubernetes-in-Docker) cluster running on an Ubuntu nod
 
 - CML 2.9
 - Ubuntu 24.04
-- Nexus 9kv 
+- 4x Nexus 9kv leaf switches (Leaf1-4), interconnected via 2 spines
+- Ubuntu node has 4 dedicated fabric-facing interfaces, one per leaf:
+  - `ens3` - Leaf1 `eth1/6`
+  - `ens4` - Leaf2 `eth1/6`
+  - `ens5` - Leaf3 `eth1/6`
+  - `ens6` - Leaf4 `eth1/6`
 
-## Node settings (Settings tab)
+## Node Settings
 
 ```
 RAM: 8192 MB
 CPUs: 4
 Boot Disk Size: 20 GB
 ```
-(Sized for a multi-node kind cluster: control-plane + 2 workers, each running
-its own kubelet/containerd overhead.)
+(Sized for a multi-node kind cluster: control-plane + 2 workers, each running its own kubelet/containerd overhead.)
 
 ## Initial-config
 
@@ -94,3 +98,11 @@ kubectl get nodes
 ```
 
 Nodes will show `NotReady` until a CNI (Cilium) is installed — expected at this stage.
+
+## Cilium + BGP
+
+Each kind node gets a second interface (`eth1`) wired straight to its own leaf switch, in addition to the existing `eth0` (`172.18.0.0/16`, cluster sync only). Cilium runs in native routing mode with the BGP Control Plane enabled, forming one eBGP session per node over its `eth1` — cluster AS 65001 to fabric AS 65000 — advertising each node's Pod CIDR to the fabric.
+
+See [`cilium/install.md`](cilium/install.md) for the full setup (macvlan interfaces, Cilium install, BGP config apply) and [`cilium/bgp-config.yaml`](cilium/bgp-config.yaml) for the BGP Control Plane manifests.
+
+EVPN on the NX-OS fabric side is a later, separate phase — no Cilium-side config changes are expected when it's enabled.
