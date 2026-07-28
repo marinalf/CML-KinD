@@ -103,6 +103,8 @@ Nodes will show `NotReady` until a CNI (Cilium) is installed — expected at thi
 
 ## Cilium + BGP
 
+Cilium `v1.19.5` (installed via `cilium-cli` `v0.19.6`).
+
 Each kind node gets a second interface (`eth1`) wired straight to its own leaf switch, in addition to the existing `eth0` (`172.18.0.0/16`, cluster sync only). Cilium runs in native routing mode with the BGP Control Plane enabled, forming one eBGP session per node over its `eth1` — cluster AS 65001 to fabric AS 65000 — advertising each node's Pod CIDR to the fabric.
 
 See [`cilium/install.md`](cilium/install.md) for the full setup (macvlan interfaces, Cilium install, BGP config apply) and [`cilium/bgp-config.yaml`](cilium/bgp-config.yaml) for the BGP Control Plane manifests.
