@@ -13,6 +13,38 @@ Build notes for a `kind` (Kubernetes-in-Docker) cluster running on an Ubuntu nod
   - `ens5` - Leaf3 `eth1/6`
   - `ens6` - Leaf4 `eth1/6`
 
+## Topology
+
+```
+              +---------+                               +---------+
+              | Spine1  |                               | Spine2  |
+              +---------+                               +---------+
+                    |                                         |
+                   full mesh: every leaf uplinks to both spines
+                    |                                         |
+---------+----------+---------+--------------------+----------+---------+---------
+         |                    |                    |                    |
++-----------------+  +-----------------+  +-----------------+  +-----------------+
+|      Leaf1      |  |      Leaf2      |  |      Leaf3      |  |      Leaf4      |
++-----------------+  +-----------------+  +-----------------+  +-----------------+
+      eth1/6               eth1/6               eth1/6               eth1/6
+       ens3                 ens4                 ens5                 ens6
+         |                    |                    |                    |
++-----------------+  +-----------------+  +-----------------+  +-----------------+
+|  control-plane  |  |     worker      |  |     worker2     |  |     worker3     |
+|    eth1 .0.2    |  |    eth1 .0.6    |  |   eth1 .0.10    |  |   eth1 .0.14    |
++-----------------+  +-----------------+  +-----------------+  +-----------------+
+         |                    |                    |                    |
+       eth0                 eth0                 eth0                 eth0
+---------+--------------------+--------------------+--------------------+---------
+                172.18.0.0/16 (docker bridge - cluster sync only)
+```
+
+Node names shown are abbreviated (`kind-cluster-` prefix omitted). Fabric IPs
+(`eth1`, `198.19.0.x`) are per node/30 as listed in
+[`cilium/install.md`](cilium/install.md); `eth0` (`172.18.0.0/16`) is the
+shared kind Docker bridge used only for cluster-internal traffic.
+
 ## Node Settings
 
 ```
