@@ -36,6 +36,8 @@ docker network connect --ip=198.19.0.14 leaf4-net kind-cluster-worker3
 Verify `eth1` came up on each node:
 
 ```
+
+
 docker exec kind-cluster-control-plane ip -4 addr show eth1
 docker exec kind-cluster-worker        ip -4 addr show eth1
 docker exec kind-cluster-worker2       ip -4 addr show eth1

@@ -22,7 +22,7 @@ Boot Disk Size: 20 GB
 ```
 (Sized for a multi-node kind cluster: control-plane + 2 workers, each running its own kubelet/containerd overhead.)
 
-## Initial-config
+## Initial Config
 
 ```yaml
 #cloud-config
@@ -93,6 +93,8 @@ nodes:
 Create the cluster on the Ubuntu node:
 
 ```
+git clone https://github.com/marinalf/CML-KinD.git
+cd CML-KinD
 kind create cluster --name kind-cluster --config kind-config.yaml
 kubectl get nodes
 ```
