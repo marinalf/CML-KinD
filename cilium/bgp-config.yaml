@@ -1,28 +1,17 @@
 # eBGP: cluster AS 65001 <-> fabric AS 65000, one session per node over its
-# dedicated leaf-facing eth1 interface (peer/local addresses set per node
-# below in CiliumBGPNodeConfigOverride).
-apiVersion: cilium.io/v2
-kind: CiliumBGPClusterConfig
-metadata:
-  name: fabric-bgp
-spec:
-  nodeSelector:
-    matchLabels:
-      kubernetes.io/os: linux
-  bgpInstances:
-    - name: cluster-instance
-      localASN: 65001
-      peers:
-        - name: leaf-peer
-          peerASN: 65000
-          peerConfigRef:
-            name: leaf-peer-config
----
+# dedicated leaf-facing eth1 interface. peerAddress differs per node (each
+# node peers with a different leaf), so each gets its own
+# CiliumBGPClusterConfig scoped to that node via kubernetes.io/hostname.
+# Local address is auto-selected from eth1 via transport.sourceInterface on
+# the shared peer config below (Cilium v1.19 CiliumBGPNodeConfigOverride only
+# supports localAddress/localPort/routerID/localASN, not peerAddress).
 apiVersion: cilium.io/v2
 kind: CiliumBGPPeerConfig
 metadata:
   name: leaf-peer-config
 spec:
+  transport:
+    sourceInterface: eth1
   gracefulRestart:
     enabled: true
     restartTimeSeconds: 15
@@ -44,49 +33,73 @@ spec:
     - advertisementType: PodCIDR
 ---
 apiVersion: cilium.io/v2
-kind: CiliumBGPNodeConfigOverride
+kind: CiliumBGPClusterConfig
 metadata:
-  name: kind-cluster-control-plane
+  name: fabric-bgp-control-plane
 spec:
+  nodeSelector:
+    matchLabels:
+      kubernetes.io/hostname: kind-cluster-control-plane
   bgpInstances:
     - name: cluster-instance
+      localASN: 65001
       peers:
         - name: leaf-peer
-          peerAddress: 198.19.0.1/30
-          localAddress: 198.19.0.2/30
+          peerASN: 65000
+          peerAddress: 198.19.0.1
+          peerConfigRef:
+            name: leaf-peer-config
 ---
 apiVersion: cilium.io/v2
-kind: CiliumBGPNodeConfigOverride
+kind: CiliumBGPClusterConfig
 metadata:
-  name: kind-cluster-worker
+  name: fabric-bgp-worker
 spec:
+  nodeSelector:
+    matchLabels:
+      kubernetes.io/hostname: kind-cluster-worker
   bgpInstances:
     - name: cluster-instance
+      localASN: 65001
       peers:
         - name: leaf-peer
-          peerAddress: 198.19.0.5/30
-          localAddress: 198.19.0.6/30
+          peerASN: 65000
+          peerAddress: 198.19.0.5
+          peerConfigRef:
+            name: leaf-peer-config
 ---
 apiVersion: cilium.io/v2
-kind: CiliumBGPNodeConfigOverride
+kind: CiliumBGPClusterConfig
 metadata:
-  name: kind-cluster-worker2
+  name: fabric-bgp-worker2
 spec:
+  nodeSelector:
+    matchLabels:
+      kubernetes.io/hostname: kind-cluster-worker2
   bgpInstances:
     - name: cluster-instance
+      localASN: 65001
       peers:
         - name: leaf-peer
-          peerAddress: 198.19.0.9/30
-          localAddress: 198.19.0.10/30
+          peerASN: 65000
+          peerAddress: 198.19.0.9
+          peerConfigRef:
+            name: leaf-peer-config
 ---
 apiVersion: cilium.io/v2
-kind: CiliumBGPNodeConfigOverride
+kind: CiliumBGPClusterConfig
 metadata:
-  name: kind-cluster-worker3
+  name: fabric-bgp-worker3
 spec:
+  nodeSelector:
+    matchLabels:
+      kubernetes.io/hostname: kind-cluster-worker3
   bgpInstances:
     - name: cluster-instance
+      localASN: 65001
       peers:
         - name: leaf-peer
-          peerAddress: 198.19.0.13/30
-          localAddress: 198.19.0.14/30
+          peerASN: 65000
+          peerAddress: 198.19.0.13
+          peerConfigRef:
+            name: leaf-peer-config
