@@ -69,3 +69,28 @@ runcmd:
   - install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
 ```
 ## Cluster Config
+
+1 control-plane node + 3 worker nodes. The default CNI (kindnet) is disabled since Cilium will be installed separately and configured for BGP/EVPN peering with the NX-OS fabric.
+
+`kind-config.yaml`:
+
+```yaml
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+networking:
+  disableDefaultCNI: true
+nodes:
+  - role: control-plane
+  - role: worker
+  - role: worker
+  - role: worker
+```
+
+Create the cluster on the Ubuntu node:
+
+```
+kind create cluster --name kind-cluster --config kind-config.yaml
+kubectl get nodes
+```
+
+Nodes will show `NotReady` until a CNI (Cilium) is installed — expected at this stage.
