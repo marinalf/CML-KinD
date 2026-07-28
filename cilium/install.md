@@ -2,6 +2,43 @@
 
 Run all of this on the CML Ubuntu node.
 
+## 0. Bring up the fabric-facing interfaces
+
+`ens3`-`ens6` come up administratively **down** by default. Docker's macvlan
+needs the parent interface up to pass any traffic. Persist this via netplan
+(same mechanism already managing `ens2`) so it survives a reboot — these
+interfaces don't need an IP of their own, just link-up, since Docker's
+macvlan handles addressing on the container side:
+
+```
+sudo tee /etc/netplan/61-fabric-interfaces.yaml > /dev/null << 'EOF'
+network:
+  version: 2
+  ethernets:
+    ens3:
+      dhcp4: false
+      optional: true
+    ens4:
+      dhcp4: false
+      optional: true
+    ens5:
+      dhcp4: false
+      optional: true
+    ens6:
+      dhcp4: false
+      optional: true
+EOF
+sudo netplan apply
+```
+
+Confirm:
+
+```
+ip -br link show | grep -E 'ens3|ens4|ens5|ens6'
+```
+
+All four should show `UP` and `LOWER_UP`.
+
 ## 1. Give each kind node a dedicated fabric interface
 
 Each kind node keeps `eth0` (`172.18.0.0/16`, kind's default Docker bridge) for cluster-internal traffic only, and gets a second interface `eth1` wired straight to its own leaf switch via a Docker macvlan network on top of the host's physical uplink.
