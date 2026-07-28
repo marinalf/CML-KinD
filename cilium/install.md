@@ -4,11 +4,7 @@ Run all of this on the CML Ubuntu node.
 
 ## 0. Bring up the fabric-facing interfaces
 
-`ens3`-`ens6` come up administratively **down** by default. Docker's macvlan
-needs the parent interface up to pass any traffic. Persist this via netplan
-(same mechanism already managing `ens2`) so it survives a reboot — these
-interfaces don't need an IP of their own, just link-up, since Docker's
-macvlan handles addressing on the container side:
+`ens3`-`ens6` come up administratively **down** by default. Docker's macvlan needs the parent interface up to pass any traffic. Persist this via netplan (same mechanism already managing `ens2`) so it survives a reboot — these interfaces do not need an IP of their own, just link-up, since Docker's macvlan handles addressing on the container side:
 
 ```
 sudo tee /etc/netplan/61-fabric-interfaces.yaml > /dev/null << 'EOF'
@@ -73,8 +69,6 @@ docker network connect --ip=198.19.0.14 leaf4-net kind-cluster-worker3
 Verify `eth1` came up on each node:
 
 ```
-
-
 docker exec kind-cluster-control-plane ip -4 addr show eth1
 docker exec kind-cluster-worker        ip -4 addr show eth1
 docker exec kind-cluster-worker2       ip -4 addr show eth1
@@ -120,7 +114,23 @@ kubectl apply -f bgp-config.yaml
 
 ```
 cilium bgp peers
-cilium bgp routes
 ```
 
-All 4 sessions should show `established` (remote AS 65000). Cross-node pod reachability (e.g. a pod on `control-plane` reaching a pod on `worker3`, which sits behind a different leaf) confirms the spine is carrying traffic between leaves for this underlay.
+All 4 sessions should show `established` (remote AS 65000).
+
+Check what's actually being advertised/available:
+
+```
+cilium bgp routes advertised ipv4 unicast
+cilium bgp routes available ipv4 unicast
+```
+
+Scope to one neighbor with `peer <ip>`, e.g. `cilium bgp routes advertised ipv4 unicast peer 198.19.0.1`.
+
+On each leaf, confirm the Pod CIDR routes actually landed (swap the neighbor IP per leaf — `198.19.0.2`/`.6`/`.10`/`.14`):
+
+```
+show bgp ipv4 unicast neighbors 198.19.0.2 advertised-routes
+show bgp ipv4 unicast neighbors 198.19.0.2 received-routes
+show ip route bgp
+```
