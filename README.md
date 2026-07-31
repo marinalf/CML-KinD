@@ -141,4 +141,3 @@ Each kind node gets a second interface (`eth1`) wired straight to its own leaf s
 
 See [`cilium/install.md`](cilium/install.md) for the full setup (macvlan interfaces, Cilium install, BGP config apply) and [`cilium/bgp-config.yaml`](cilium/bgp-config.yaml) for the BGP Control Plane manifests.
 
-EVPN on the NX-OS fabric side is a later, separate phase — no Cilium-side config changes are expected when it's enabled.

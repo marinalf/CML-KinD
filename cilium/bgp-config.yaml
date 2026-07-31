@@ -1,10 +1,6 @@
-# eBGP: cluster AS 65001 <-> fabric AS 65000, one session per node over its
-# dedicated leaf-facing eth1 interface. peerAddress differs per node (each
-# node peers with a different leaf), so each gets its own
-# CiliumBGPClusterConfig scoped to that node via kubernetes.io/hostname.
-# Local address is auto-selected from eth1 via transport.sourceInterface on
-# the shared peer config below (Cilium v1.19 CiliumBGPNodeConfigOverride only
-# supports localAddress/localPort/routerID/localASN, not peerAddress).
+# eBGP: cluster AS 65001 <-> fabric AS 65000, one session per node over its dedicated leaf-facing eth1 interface. peerAddress differs per node (each
+# node peers with a different leaf), so each gets its own CiliumBGPClusterConfig scoped to that node via kubernetes.io/hostname.
+# Local address is sourced from eth1 via transport.sourceInterface on the shared peer config below, not the node's default (eth0) IP.
 apiVersion: cilium.io/v2
 kind: CiliumBGPPeerConfig
 metadata:

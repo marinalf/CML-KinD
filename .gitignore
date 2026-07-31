@@ -1,2 +1,5 @@
 credentials
 sample-bgp-config-no-evpn.txt
+sample-config-evpn.txt
+cisco-iserver/
+.claude/
